@@ -19,5 +19,11 @@ public class LobbyNetwork : PunBehaviour
     public override void OnJoinedLobby()
     {
         print("Joined lobby.");
+
+        if (!PhotonNetwork.inRoom)
+        {
+            MainCanvasManager.Instance.CurrentRoomCanvas.transform.SetAsFirstSibling();
+            MainCanvasManager.Instance.CreateRoomUI.SetActive(true);
+        }
     }
 }
