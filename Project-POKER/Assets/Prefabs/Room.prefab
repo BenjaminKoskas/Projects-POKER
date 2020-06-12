@@ -561,6 +561,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _roomNameText: {fileID: 9073842055418826614}
+  _betText: {fileID: 9073842055549255069}
+  _gameText: {fileID: 9073842056552380452}
+  _typeText: {fileID: 9073842056707208139}
+  _playerText: {fileID: 9073842056103747913}
 --- !u!1 &9073842056552380450
 GameObject:
   m_ObjectHideFlags: 0

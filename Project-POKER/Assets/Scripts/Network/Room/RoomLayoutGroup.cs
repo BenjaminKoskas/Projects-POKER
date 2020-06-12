@@ -41,7 +41,11 @@ public class RoomLayoutGroup : PunBehaviour
                 index = (RoomListingsButtons.Count - 1);
                 if (index % 2 != 0)
                 {
-                    roomListingObj.GetComponent<Image>().color = new Color(75, 75, 75, 255);
+                    roomListingObj.GetComponent<Image>().color = new Color32(75, 75, 75, 100);
+                }
+                else
+                {
+                    roomListingObj.GetComponent<Image>().color = new Color32(46, 47, 48, 100);
                 }
             }
         }
@@ -49,7 +53,13 @@ public class RoomLayoutGroup : PunBehaviour
         if (index != -1)
         {
             RoomListing roomListing = RoomListingsButtons[index];
+
             roomListing.SetRoomNameText(room.Name);
+            roomListing.SetBetText(room.CustomProperties["SB"] + "$/" + room.CustomProperties["BB"] + "$");
+            roomListing.SetGameText(room.CustomProperties["Type"].ToString());
+            roomListing.SetTypeText(room.CustomProperties["MaxPlayers"].ToString());
+            roomListing.SetPlayerText(room.PlayerCount + "/" + room.CustomProperties["MaxPlayers"]);
+
             roomListing.Updated = true;
         }
     }

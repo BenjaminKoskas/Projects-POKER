@@ -13,6 +13,11 @@ public class PlayerLayoutGroup : PunBehaviour
 
     public override void OnJoinedRoom()
     {
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+
         MainCanvasManager.Instance.CurrentRoomCanvas.transform.SetAsLastSibling();
         MainCanvasManager.Instance.CreateRoomUI.SetActive(false);
 
