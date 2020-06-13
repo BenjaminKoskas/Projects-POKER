@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Globalization;
-using ExitGames.Client.Photon;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using Photon;
-using WebSocketSharp;
 
 public class CreateRoom : PunBehaviour
 {
@@ -31,8 +26,8 @@ public class CreateRoom : PunBehaviour
 
     public void OnClick_CreateRoom()
     {
-        if (RoomName.text.IsNullOrEmpty() || BB.text.IsNullOrEmpty() || SB.text.IsNullOrEmpty() ||
-            MaxPlayers.text.IsNullOrEmpty())
+        if (RoomName.text == "" || BB.text == "" || SB.text == "" ||
+            MaxPlayers.text == "")
         {
             Debug.Log("Some room properties are not set");
             return;

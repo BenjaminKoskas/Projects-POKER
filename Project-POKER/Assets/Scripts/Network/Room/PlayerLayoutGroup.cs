@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ExitGames.Client.Photon;
 using UnityEngine;
 using Photon;
 
@@ -43,6 +44,13 @@ public class PlayerLayoutGroup : PunBehaviour
         if (photonPlayer == null) { return; }
 
         PlayerLeftRoom(photonPlayer);
+
+        ExitGames.Client.Photon.Hashtable hash = new Hashtable
+        {
+            {"Index", PhotonNetwork.room.PlayerCount} , {"Stack", 0}
+        };
+
+        photonPlayer.CustomProperties = hash;
 
         GameObject playerListingObj = Instantiate(PlayerListingPrefab);
         playerListingObj.transform.SetParent(transform, false);
