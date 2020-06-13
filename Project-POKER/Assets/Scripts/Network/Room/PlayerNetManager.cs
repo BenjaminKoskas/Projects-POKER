@@ -1,18 +1,11 @@
 ﻿using UnityEngine;
-using Photon;
 using TMPro;
 
-public class PlayerNetManager : PunBehaviour, IPunObservable
+public class PlayerNetManager : MonoBehaviour
 {
     public GameObject Username;
     public GameObject Cash;
     public GameObject Action;
-
-    private PhotonView PhotonView;
-
-    private Vector3 realPosition;
-    private Vector3 realScale;
-    private Transform realParent;
 
     private TMP_Text UsernameText;
     private TMP_Text CashText;
@@ -20,8 +13,6 @@ public class PlayerNetManager : PunBehaviour, IPunObservable
 
     private void Awake()
     {
-        PhotonView = GetComponent<PhotonView>();
-
         UsernameText = Username.GetComponent<TMP_Text>();
         CashText = Cash.GetComponent<TMP_Text>();
         ActionText = Action.GetComponent<TMP_Text>();
@@ -41,21 +32,5 @@ public class PlayerNetManager : PunBehaviour, IPunObservable
 
         UsernameText.text = player.NickName;
         CashText.text = stack.ToString();
-    }
-
-    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-    {
-        if (stream.isWriting)
-        {
-            stream.SendNext(transform.localPosition);
-            stream.SendNext(transform.localScale);
-            stream.SendNext(transform.parent);
-        }
-        else
-        {
-            realPosition = (Vector3) stream.ReceiveNext();
-            realScale = (Vector3) stream.ReceiveNext();
-            realParent = (Transform) stream.ReceiveNext();
-        }
     }
 }

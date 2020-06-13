@@ -2,9 +2,12 @@
 using ExitGames.Client.Photon;
 using UnityEngine;
 using Photon;
+using UnityEngine.UI;
 
 public class PlayerLayoutGroup : PunBehaviour
 {
+    public Slider buyInSlider;
+
     [SerializeField] 
     private GameObject _playerListingPrefab;
     private GameObject PlayerListingPrefab => _playerListingPrefab;
@@ -59,6 +62,13 @@ public class PlayerLayoutGroup : PunBehaviour
         playerListing.ApplyPhotonPlayer(photonPlayer);
 
         PlayerListings.Add(playerListing);
+
+        int maxBuyIn = (int) PhotonNetwork.room.CustomProperties["MaxBuyIn"];
+        int minBuyIn = (int) PhotonNetwork.room.CustomProperties["MinBuyIn"];
+
+        buyInSlider.maxValue = maxBuyIn;
+        buyInSlider.minValue = minBuyIn;
+        buyInSlider.value = buyInSlider.minValue;
     }
 
     private void PlayerLeftRoom(PhotonPlayer photonPlayer)

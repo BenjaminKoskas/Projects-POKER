@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 using Photon;
 
@@ -13,8 +14,8 @@ public class CreateRoom : PunBehaviour
     private TMP_InputField BB => _BB;
 
     [SerializeField]
-    private TMP_InputField _SB;
-    private TMP_InputField SB => _SB;
+    private TMP_InputField _BuyIn;
+    private TMP_InputField BuyIn => _BuyIn;
 
     [SerializeField]
     private TMP_Dropdown _type;
@@ -26,7 +27,7 @@ public class CreateRoom : PunBehaviour
 
     public void OnClick_CreateRoom()
     {
-        if (RoomName.text == "" || BB.text == "" || SB.text == "" ||
+        if (RoomName.text == "" || BB.text == "" || BuyIn.text == "" ||
             MaxPlayers.text == "")
         {
             Debug.Log("Some room properties are not set");
@@ -35,7 +36,12 @@ public class CreateRoom : PunBehaviour
 
         ExitGames.Client.Photon.Hashtable hash = new ExitGames.Client.Photon.Hashtable
         {
-            {"BB", int.Parse(BB.text)}, {"SB", int.Parse(SB.text)}, {"Type", Type.captionText.text}, {"MaxPlayers", int.Parse(MaxPlayers.text)}
+            {"BB", int.Parse(BB.text)}, 
+            {"SB", (int)Math.Round((float.Parse(BB.text) / 2))}, 
+            {"Type", Type.captionText.text}, 
+            {"MaxPlayers", int.Parse(MaxPlayers.text)}, 
+            {"MaxBuyIn", int.Parse(BuyIn.text)},
+            {"MinBuyIn", (int)Math.Round((float.Parse(BuyIn.text) / 2))}
         };
 
         string[] ss = {"BB", "SB", "Type", "MaxPlayers"};
