@@ -16,7 +16,6 @@ public class ChipsManager : MonoBehaviour
         foreach (Chip chip in sc_chips)
         {
             chips.Add(chip.percentageValue * 100 + "%", chip);
-            Debug.Log(chip.percentageValue * 100 + "%");
         }
     }
 }
