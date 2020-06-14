@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ab54bbb183b18343ab9f1b224e75830, type: 3}
-  m_Name: C10
+  m_Name: HJ
   m_EditorClassIdentifier: 
-  card: 24
-  type: 2
-  value: 10
-  background: {fileID: -7557494978891415441, guid: 83f705c385cfeb14a86fdad537eb27b8, type: 3}
+  card: 23
+  type: 0
+  value: 9
+  background: {fileID: -6555575649291838755, guid: 83f705c385cfeb14a86fdad537eb27b8, type: 3}

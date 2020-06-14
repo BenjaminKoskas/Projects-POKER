@@ -1,4 +1,13 @@
-﻿public enum CardTypeEnum
+﻿using System.ComponentModel;
+
+public enum CardTypeEnum
 {
-    COEUR, TREFLE, CARREAU, PIQUE
+    [Description("H")]
+    HEARTS,
+    [Description("C")]
+    CLUBS,
+    [Description("D")]
+    DIAMONDS,
+    [Description("S")]
+    SPADES
 }

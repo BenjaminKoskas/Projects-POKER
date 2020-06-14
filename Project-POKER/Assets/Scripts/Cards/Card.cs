@@ -9,32 +9,32 @@ public class Card : ScriptableObject
 
     public Sprite background;
 
-    public bool isCoeur()
+    public bool isHearts()
     {
-        if (type.Equals(CardTypeEnum.COEUR))
+        if (type.Equals(CardTypeEnum.HEARTS))
             return true;
         return false;
     }
-    public bool isTrefle()
+    public bool isClubs()
     {
-        if (type.Equals(CardTypeEnum.TREFLE))
+        if (type.Equals(CardTypeEnum.CLUBS))
             return true;
         return false;
     }
-    public bool isPique()
+    public bool isSpades()
     {
-        if (type.Equals(CardTypeEnum.PIQUE))
+        if (type.Equals(CardTypeEnum.SPADES))
             return true;
         return false;
     }
-    public bool isCarreau()
+    public bool isDiamonds()
     {
-        if (type.Equals(CardTypeEnum.CARREAU))
+        if (type.Equals(CardTypeEnum.DIAMONDS))
             return true;
         return false;
     }
 
-    public bool isStronger(Card _card)
+    public bool isStrongerThan(Card _card)
     {
         if (value > _card.value)
         {

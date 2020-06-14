@@ -5033,7 +5033,6 @@ GameObject:
   - component: {fileID: 1224871582}
   - component: {fileID: 1224871583}
   - component: {fileID: 1224871585}
-  - component: {fileID: 1224871584}
   m_Layer: 5
   m_Name: Room
   m_TagString: Untagged
@@ -5079,20 +5078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buyInSlider: {fileID: 1940415327}
---- !u!114 &1224871584
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1224871581}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c76ca6ac07dd160408230f1dfe4b45e3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
   buyIn: {fileID: 193710210}
-  buyInSlider: {fileID: 1940415327}
 --- !u!222 &1224871585
 CanvasRenderer:
   m_ObjectHideFlags: 0
