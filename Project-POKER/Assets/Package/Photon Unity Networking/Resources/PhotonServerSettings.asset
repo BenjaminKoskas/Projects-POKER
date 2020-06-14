@@ -41,4 +41,5 @@ MonoBehaviour:
   - RPC_LoadedGameScene
   - RPC_CreatePlayer
   - RPC_UpdatePosition
+  - RPC_GameStartDefineRole
   DisableAutoOpenWizard: 1

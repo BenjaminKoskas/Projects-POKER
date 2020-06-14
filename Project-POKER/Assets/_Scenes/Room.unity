@@ -1163,6 +1163,8 @@ GameObject:
   - component: {fileID: 1441704223}
   - component: {fileID: 1441704222}
   - component: {fileID: 1441704224}
+  - component: {fileID: 1441704225}
+  - component: {fileID: 1441704226}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1182,6 +1184,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6600c1a4a2bfac14582614917b1ef9f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardPrefab: {fileID: 7523204357743602323, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}
 --- !u!4 &1441704223
 Transform:
   m_ObjectHideFlags: 0
@@ -1208,6 +1211,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3890b6851ad73f44db721eb6d8ff68d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chipPrefab: {fileID: 7995891264828604936, guid: 39e67fb06fdd61940b05259c9d8be1bd, type: 3}
+--- !u!114 &1441704225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441704221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ownerId: 0
+  group: 0
+  OwnerShipWasTransfered: 0
+  prefixBackup: -1
+  synchronization: 0
+  onSerializeTransformOption: 3
+  onSerializeRigidBodyOption: 2
+  ownershipTransfer: 0
+  ObservedComponents:
+  - {fileID: 0}
+  ObservedComponentsFoldoutOpen: 1
+  viewIdField: 1
+  instantiationId: 1
+  currentMasterID: -1
+  isRuntimeInstantiated: 0
+--- !u!114 &1441704226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441704221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59e7289867c29634a9a5a3721588cb5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameState: 0
 --- !u!1 &1736630404
 GameObject:
   m_ObjectHideFlags: 0

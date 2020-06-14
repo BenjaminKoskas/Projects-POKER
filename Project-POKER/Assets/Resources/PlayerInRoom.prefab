@@ -443,6 +443,7 @@ GameObject:
   - component: {fileID: 555941874582576826}
   - component: {fileID: -2565717949628834631}
   - component: {fileID: 8183661459747030816}
+  - component: {fileID: -3144601432126633389}
   m_Layer: 5
   m_Name: PlayerInRoom
   m_TagString: Untagged
@@ -592,6 +593,18 @@ MonoBehaviour:
   Username: {fileID: 5305762778423877148}
   Cash: {fileID: 5305762779074603379}
   Action: {fileID: 5305762779387099994}
+--- !u!114 &-3144601432126633389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5305762778164348349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c81d7f651de0804fa1dc50956ed7e06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5305762778423877148
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class ChipDisplay : MonoBehaviour
 {
@@ -9,5 +10,7 @@ public class ChipDisplay : MonoBehaviour
     private void Start()
     {
         percentageValue = chip.percentageValue;
+
+        GetComponent<Image>().sprite = chip.image;
     } 
 }

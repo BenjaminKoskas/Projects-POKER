@@ -11,10 +11,10 @@ public class PlayerNetwork : MonoBehaviour
     public List<GameObject> playersPosPos = new List<GameObject>();
 
     public string PlayerName { get; private set; }
+    
+    public int PlayersInGame = 0;
 
     private PhotonView PhotonView;
-
-    private int PlayersInGame = 0;
 
     private void Awake()
     {

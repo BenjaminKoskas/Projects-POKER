@@ -7,15 +7,24 @@ public class ChipsManager : MonoBehaviour
 
     public static ChipsManager Instance;
 
+    public GameObject chipPrefab;
+
     private void Awake()
     {
         if (Instance == null)
             Instance = this;
 
-        Chip[] sc_chips = Utils.GetAllInstances<Chip>();
+        Chip[] sc_chips = Utils.GetAllInstances<Chip>("Chips");
         foreach (Chip chip in sc_chips)
         {
-            chips.Add(chip.percentageValue * 100 + "%", chip);
+            if(chip.isDealer)
+                chips.Add("Dealer", chip);
+            else if (chip.isBB)
+                chips.Add("BB", chip);
+            else if (chip.isSB)
+                chips.Add("SB", chip);
+            else
+                chips.Add(chip.percentageValue * 100 + "%", chip);
         }
     }
 }

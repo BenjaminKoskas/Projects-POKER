@@ -1,10 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 
-public static class Utils 
+public static class Utils
 {
     public static string GetDescription<T>(this T enumerationValue)
         where T : struct
@@ -32,16 +31,10 @@ public static class Utils
         return enumerationValue.ToString();
     }
 
-    public static T[] GetAllInstances<T>() where T : ScriptableObject
+    public static T[] GetAllInstances<T>(string _path) where T : ScriptableObject
     {
-        string[] guids = AssetDatabase.FindAssets("t:" + typeof(T).Name);  //FindAssets uses tags check documentation for more info
-        T[] a = new T[guids.Length];
-        for (int i = 0; i < guids.Length; i++)         //probably could get optimized 
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-            a[i] = AssetDatabase.LoadAssetAtPath<T>(path);
-        }
+        T[] assets = Resources.LoadAll<T>(_path);
 
-        return a;
+        return assets;
     }
 }

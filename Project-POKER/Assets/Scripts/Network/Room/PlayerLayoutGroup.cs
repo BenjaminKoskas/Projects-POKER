@@ -15,6 +15,8 @@ public class PlayerLayoutGroup : PunBehaviour
     private List<PlayerListing> _playerListings = new List<PlayerListing>();
     private List<PlayerListing> PlayerListings => _playerListings;
 
+    private int playersCount = 0;
+
     public override void OnJoinedRoom()
     {
         foreach (Transform child in transform)
@@ -48,9 +50,18 @@ public class PlayerLayoutGroup : PunBehaviour
 
         PlayerLeftRoom(photonPlayer);
 
+        playersCount++;
+
+        int maxBuyIn = (int)PhotonNetwork.room.CustomProperties["MaxBuyIn"];
+        int minBuyIn = (int)PhotonNetwork.room.CustomProperties["MinBuyIn"];
+
+        buyInSlider.maxValue = maxBuyIn;
+        buyInSlider.minValue = minBuyIn;
+        buyInSlider.value = buyInSlider.minValue;
+
         ExitGames.Client.Photon.Hashtable hash = new Hashtable
         {
-            {"Index", PhotonNetwork.room.PlayerCount} , {"Stack", 0}
+            {"Index", playersCount} , {"Stack", minBuyIn}
         };
 
         photonPlayer.CustomProperties = hash;
@@ -62,13 +73,6 @@ public class PlayerLayoutGroup : PunBehaviour
         playerListing.ApplyPhotonPlayer(photonPlayer);
 
         PlayerListings.Add(playerListing);
-
-        int maxBuyIn = (int) PhotonNetwork.room.CustomProperties["MaxBuyIn"];
-        int minBuyIn = (int) PhotonNetwork.room.CustomProperties["MinBuyIn"];
-
-        buyInSlider.maxValue = maxBuyIn;
-        buyInSlider.minValue = minBuyIn;
-        buyInSlider.value = buyInSlider.minValue;
     }
 
     private void PlayerLeftRoom(PhotonPlayer photonPlayer)

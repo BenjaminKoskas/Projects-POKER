@@ -7,12 +7,14 @@ public class CardsManager : MonoBehaviour
 
     public static CardsManager Instance;
 
+    public GameObject cardPrefab;
+
     private void Awake()
     {
         if (Instance == null)
             Instance = this;
 
-        Card[] sc_cards = Utils.GetAllInstances<Card>();
+        Card[] sc_cards = Utils.GetAllInstances<Card>("Cards");
         foreach (Card card in sc_cards)
         {
             cards.Add(card.type.GetDescription() + card.value.GetDescription(), card);
