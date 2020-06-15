@@ -9,8 +9,20 @@ public class ChipDisplay : MonoBehaviour
 
     private void Start()
     {
+        if (chip != null)
+        {
+            percentageValue = chip.percentageValue;
+
+            GetComponent<Image>().sprite = chip.image;
+        }
+    }
+
+    public void SetChip(Chip _chip)
+    {
+        chip = _chip;
+
         percentageValue = chip.percentageValue;
 
         GetComponent<Image>().sprite = chip.image;
-    } 
+    }
 }

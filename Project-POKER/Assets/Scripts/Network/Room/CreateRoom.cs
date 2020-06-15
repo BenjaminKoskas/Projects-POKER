@@ -46,7 +46,7 @@ public class CreateRoom : PunBehaviour
 
         string[] ss = {"BB", "SB", "Type", "MaxPlayers"};
 
-        RoomOptions roomOptions = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 6, CustomRoomProperties = hash, CustomRoomPropertiesForLobby = ss };
+        RoomOptions roomOptions = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = Convert.ToByte((int)hash["MaxPlayers"]), CustomRoomProperties = hash, CustomRoomPropertiesForLobby = ss };
         
         if (PhotonNetwork.CreateRoom(RoomName.text, roomOptions, TypedLobby.Default))
         {

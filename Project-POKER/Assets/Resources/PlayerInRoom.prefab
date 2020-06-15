@@ -54,7 +54,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1650161252
 RectTransform:
   m_ObjectHideFlags: 0
@@ -129,7 +129,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1938913504
 RectTransform:
   m_ObjectHideFlags: 0
@@ -605,6 +605,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c81d7f651de0804fa1dc50956ed7e06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  role: 0
+  index: 0
+  cards:
+  - {fileID: 9144421468492220028}
+  - {fileID: 4547831943897278521}
+  hiddenCards:
+  - {fileID: 1938913503}
+  - {fileID: 1650161251}
 --- !u!1 &5305762778423877148
 GameObject:
   m_ObjectHideFlags: 0
@@ -1192,6 +1200,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7523204357743602322, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}
   m_PrefabInstance: {fileID: 1621375445860953327}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &9144421468492220028 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7523204357743602323, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}
+  m_PrefabInstance: {fileID: 1621375445860953327}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6303614022861292202
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1297,6 +1310,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}
+--- !u!1 &4547831943897278521 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7523204357743602323, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}
+  m_PrefabInstance: {fileID: 6303614022861292202}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &4547831943897278520 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7523204357743602322, guid: 152a96cb4345b334694fa77f4aaae939, type: 3}

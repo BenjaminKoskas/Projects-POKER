@@ -42,4 +42,5 @@ MonoBehaviour:
   - RPC_CreatePlayer
   - RPC_UpdatePosition
   - RPC_GameStartDefineRole
+  - RPC_DrawPlayerCard
   DisableAutoOpenWizard: 1

@@ -43,4 +43,5 @@ public class Card : ScriptableObject
 
         return false;
     }
+
 }

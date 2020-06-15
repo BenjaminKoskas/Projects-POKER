@@ -4,6 +4,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+    public List<Card> deck = new List<Card>();
 
     public GameStateEnum gameState;
 
@@ -21,12 +22,19 @@ public class GameManager : MonoBehaviour
     {
         photonView = GetComponent<PhotonView>();
         gameState = GameStateEnum.WaitForPlayers;
+        foreach (Card card in CardsManager.Instance.cards.Values)
+        {
+            deck.Add(card);
+            Debug.LogError(card.card);
+        }
     }
 
     private void Update()
     {
         if (PlayerNetwork.Instance == null)
             return;
+
+        bool allPlayersInGame = PlayerNetwork.Instance.PlayersInGame == PhotonNetwork.playerList.Length;
 
         if (players.Count < PhotonNetwork.playerList.Length)
         {
@@ -38,13 +46,26 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (PlayerNetwork.Instance.PlayersInGame == PhotonNetwork.playerList.Length && players.Count == PhotonNetwork.playerList.Length && gameState.Equals(GameStateEnum.WaitForPlayers))
+        bool HasAllPlayerObj = players.Count == PhotonNetwork.playerList.Length;
+
+        if (allPlayersInGame && HasAllPlayerObj)
         {
-            gameState = GameStateEnum.ChooseRole;
-            
-            if (PhotonNetwork.isMasterClient)
+            if (gameState.Equals(GameStateEnum.WaitForPlayers))
             {
-                photonView.RPC("RPC_GameStartDefineRole", PhotonTargets.All);
+                gameState = GameStateEnum.ChooseRole;
+
+                if (PhotonNetwork.isMasterClient)
+                {
+                    photonView.RPC("RPC_GameStartDefineRole", PhotonTargets.All);
+                }
+            } 
+            else if (gameState.Equals(GameStateEnum.PlayerCardDraw))
+            {
+                gameState = GameStateEnum.PlayersPlay;
+                if (PhotonNetwork.isMasterClient)
+                {
+                    photonView.RPC("RPC_DrawPlayerCard", PhotonTargets.All);
+                }
             }
         }
     }
@@ -67,5 +88,14 @@ public class GameManager : MonoBehaviour
         }
 
         gameState = GameStateEnum.PlayerCardDraw;
+    }
+
+    [PunRPC]
+    private void RPC_DrawPlayerCard()
+    {
+        foreach (Player p in players)
+        {
+            p.DrawCard();
+        }
     }
 }
