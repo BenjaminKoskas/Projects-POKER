@@ -495,6 +495,7 @@ MonoBehaviour:
   ownershipTransfer: 0
   ObservedComponents:
   - {fileID: 5305762778164348348}
+  - {fileID: -3144601432126633389}
   ObservedComponentsFoldoutOpen: 1
   viewIdField: 0
   instantiationId: -1
@@ -607,6 +608,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   role: 0
   index: 0
+  stackText: {fileID: 5305762779074603377}
   cards:
   - {fileID: 9144421468492220028}
   - {fileID: 4547831943897278521}

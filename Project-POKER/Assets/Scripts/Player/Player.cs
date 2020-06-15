@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ExitGames.Client.Photon;
+using TMPro;
 using UnityEngine;
 using Random = System.Random;
 
@@ -6,14 +7,20 @@ public enum PlayerRole {NotDefined, Dealer, BB, SB}
 
 public enum PhotonEventCodes {DrawCard = 0}
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, IPunObservable
 {
     public PlayerRole role;
 
     public int index;
 
+    public TMP_Text stackText;
+    public TMP_Text betStackText;
+
     public GameObject[] cards;
     public GameObject[] hiddenCards;
+
+    private int betStack;
+    private GameObject betStackParent;
 
     private PhotonView photonView;
     private PhotonPlayer photonPlayer;
@@ -58,8 +65,11 @@ public class Player : MonoBehaviour
                             card2 = card;
                     }
 
-                    GameManager.Instance.deck.Remove(card1);
-                    GameManager.Instance.deck.Remove(card2);
+                    if (GameManager.Instance.deck.Contains(card1) && GameManager.Instance.deck.Contains(card2))
+                    {
+                        GameManager.Instance.deck.Remove(card1);
+                        GameManager.Instance.deck.Remove(card2);
+                    }
 
                     cardsDisplays[0].SetCard(card1);
                     cardsDisplays[1].SetCard(card2);
@@ -91,28 +101,39 @@ public class Player : MonoBehaviour
         rolePosition = GameObject.Find("PlayerPos" + index);
 
         cardsDisplays = new[] {cards[0].GetComponent<CardDisplay>(), cards[1].GetComponent<CardDisplay>()};
+
+        betStackParent = GameObject.Find("Stack_BG" + index);
+        betStackText = GameObject.Find("Stack" + index).GetComponent<TMP_Text>();
+
+        betStackParent.SetActive(false);
     }
 
     public void SetRole(PlayerRole _role)
     {
         role = _role;
 
-        GameObject obj = ChipsManager.Instance.chipPrefab;
+        GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, rolePosition.transform);
+        ChipDisplay display = chip.GetComponent<ChipDisplay>();
 
         switch (_role)
         {
             case PlayerRole.Dealer:
-                obj.GetComponent<ChipDisplay>().chip = ChipsManager.Instance.chips["Dealer"];
+                display.SetChip(ChipsManager.Instance.chips["Dealer"]);
                 break;
             case PlayerRole.BB:
-                obj.GetComponent<ChipDisplay>().chip = ChipsManager.Instance.chips["BB"];
+                display.SetChip(ChipsManager.Instance.chips["BB"]);
                 break;
             case PlayerRole.SB:
-                obj.GetComponent<ChipDisplay>().chip = ChipsManager.Instance.chips["SB"];
+                display.SetChip(ChipsManager.Instance.chips["SB"]);
                 break;
         }
 
-        Instantiate(obj, rolePosition.transform);
+        display.gameObject.transform.localScale = new Vector3
+        (
+            display.gameObject.transform.localScale.x * 2,
+            display.gameObject.transform.localScale.y * 2,
+            display.gameObject.transform.localScale.z
+        );
     }
 
     public void DrawCard()
@@ -141,7 +162,51 @@ public class Player : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Not card found in the deck");
+            Debug.LogError("No card found in the deck");
+        }
+    }
+
+    public void PayBlinds()
+    {
+        int value = role == PlayerRole.BB ? (int)PhotonNetwork.room.CustomProperties["BB"] : (int)PhotonNetwork.room.CustomProperties["SB"];
+
+        GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, chipsPosition.transform);
+        ChipDisplay display = chip.GetComponent<ChipDisplay>();
+
+        display.SetChip(role == PlayerRole.BB ? ChipsManager.Instance.chips["1%"] : ChipsManager.Instance.chips["0.5%"]);
+
+        if(!betStackParent.activeSelf)
+            betStackParent.SetActive(true);
+
+        betStack += value;
+        betStackText.text = betStack + "$";
+
+        if (photonView.isMine)
+        {
+            int stack = (int) PhotonNetwork.player.CustomProperties["Stack"];
+
+            ExitGames.Client.Photon.Hashtable hash = new Hashtable
+            {
+                {"Stack", stack - value}
+            };
+
+            PhotonNetwork.player.SetCustomProperties(hash);
+
+            stackText.text = stack - value + "$";
+        }
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.isWriting)
+        {
+            stream.SendNext(stackText.text);
+            stream.SendNext(betStackText.text);
+        }
+        else if (stream.isReading)
+        {
+            stackText.text = (string) stream.ReceiveNext();
+            betStackText.text = (string) stream.ReceiveNext();
         }
     }
 }

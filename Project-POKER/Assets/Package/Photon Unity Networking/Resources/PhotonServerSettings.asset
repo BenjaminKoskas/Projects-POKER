@@ -43,4 +43,5 @@ MonoBehaviour:
   - RPC_UpdatePosition
   - RPC_GameStartDefineRole
   - RPC_DrawPlayerCard
+  - RPC_BlindsPay
   DisableAutoOpenWizard: 1

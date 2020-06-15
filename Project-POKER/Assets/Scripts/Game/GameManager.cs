@@ -1,6 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+public enum GameStateEnum
+{
+    WaitForPlayers, Distribution, Blinds, Preflop, Flop, Turn, River
+}
+
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
@@ -25,7 +31,11 @@ public class GameManager : MonoBehaviour
         foreach (Card card in CardsManager.Instance.cards.Values)
         {
             deck.Add(card);
-            Debug.LogError(card.card);
+        }
+
+        for (int i = PhotonNetwork.room.PlayerCount; i < 8; i++)
+        {
+            GameObject.Find("Stack_BG"+(i+1)).SetActive(false);
         }
     }
 
@@ -42,31 +52,37 @@ public class GameManager : MonoBehaviour
             {
                 if(!players.Contains(p))
                     players.Add(p);
-                Debug.Log(p.gameObject.name);
             }
         }
 
         bool HasAllPlayerObj = players.Count == PhotonNetwork.playerList.Length;
 
-        if (allPlayersInGame && HasAllPlayerObj)
+        switch (gameState)
         {
-            if (gameState.Equals(GameStateEnum.WaitForPlayers))
-            {
-                gameState = GameStateEnum.ChooseRole;
-
+            case GameStateEnum.WaitForPlayers:
+                if (allPlayersInGame && HasAllPlayerObj)
+                {
+                    gameState = GameStateEnum.Distribution;
+                }
+                break;
+            case GameStateEnum.Distribution:
                 if (PhotonNetwork.isMasterClient)
                 {
                     photonView.RPC("RPC_GameStartDefineRole", PhotonTargets.All);
                 }
-            } 
-            else if (gameState.Equals(GameStateEnum.PlayerCardDraw))
-            {
-                gameState = GameStateEnum.PlayersPlay;
+                break;
+            case GameStateEnum.Blinds:
+                if (PhotonNetwork.isMasterClient)
+                {
+                    photonView.RPC("RPC_BlindsPay", PhotonTargets.All);
+                }
+                break;
+            case GameStateEnum.Preflop:
                 if (PhotonNetwork.isMasterClient)
                 {
                     photonView.RPC("RPC_DrawPlayerCard", PhotonTargets.All);
                 }
-            }
+                break;
         }
     }
 
@@ -87,7 +103,20 @@ public class GameManager : MonoBehaviour
                 p.SetRole(PlayerRole.BB);
         }
 
-        gameState = GameStateEnum.PlayerCardDraw;
+        gameState = GameStateEnum.Blinds;
+    }
+
+    [PunRPC]
+    private void RPC_BlindsPay()
+    {
+        foreach (Player p in players)
+        {
+            if (p.role == PlayerRole.BB || p.role == PlayerRole.SB)
+            {
+                p.PayBlinds();
+            }
+        }
+        gameState = GameStateEnum.Preflop;
     }
 
     [PunRPC]
@@ -97,5 +126,7 @@ public class GameManager : MonoBehaviour
         {
             p.DrawCard();
         }
+
+        gameState = GameStateEnum.Flop;
     }
 }

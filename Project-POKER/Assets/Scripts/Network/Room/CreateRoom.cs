@@ -10,10 +10,6 @@ public class CreateRoom : PunBehaviour
     private TMP_Text RoomName => _roomName;
 
     [SerializeField]
-    private TMP_InputField _BB;
-    private TMP_InputField BB => _BB;
-
-    [SerializeField]
     private TMP_InputField _BuyIn;
     private TMP_InputField BuyIn => _BuyIn;
 
@@ -27,7 +23,7 @@ public class CreateRoom : PunBehaviour
 
     public void OnClick_CreateRoom()
     {
-        if (RoomName.text == "" || BB.text == "" || BuyIn.text == "" ||
+        if (RoomName.text == "" || BuyIn.text == "" ||
             MaxPlayers.text == "")
         {
             Debug.Log("Some room properties are not set");
@@ -36,8 +32,8 @@ public class CreateRoom : PunBehaviour
 
         ExitGames.Client.Photon.Hashtable hash = new ExitGames.Client.Photon.Hashtable
         {
-            {"BB", int.Parse(BB.text)}, 
-            {"SB", (int)Math.Round((float.Parse(BB.text) / 2))}, 
+            {"BB", (int)Math.Round((float.Parse(BuyIn.text) / 100))}, 
+            {"SB", (int)Math.Round((float.Parse(BuyIn.text) / 100) / 2)}, 
             {"Type", Type.captionText.text}, 
             {"MaxPlayers", int.Parse(MaxPlayers.text)}, 
             {"MaxBuyIn", int.Parse(BuyIn.text)},
