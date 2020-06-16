@@ -3,13 +3,16 @@ using TMPro;
 using UnityEngine;
 using Random = System.Random;
 
-public enum PlayerRole {NotDefined, Dealer, BB, SB}
+public enum PlayerRole {Dealer, BB, SB, UTG, UTG1, UTG2, HiJack, CutOff}
 
-public enum PhotonEventCodes {DrawCard = 0}
+public enum PlayerStatus {Fold, NotTurn, Turn}
+
+public enum PhotonEventCodes {DrawCard = 0, EndTurn = 1}
 
 public class Player : MonoBehaviour, IPunObservable
 {
     public PlayerRole role;
+    public PlayerStatus status;
 
     public int index;
 
@@ -19,16 +22,19 @@ public class Player : MonoBehaviour, IPunObservable
     public GameObject[] cards;
     public GameObject[] hiddenCards;
 
+    [HideInInspector]
+    public PhotonView photonView;
+    private PhotonPlayer photonPlayer;
+
+    private PlayerUI playerUI;
+    private CardDisplay[] cardsDisplays;
+
     private int betStack;
     private GameObject betStackParent;
-
-    private PhotonView photonView;
-    private PhotonPlayer photonPlayer;
 
     private GameObject chipsPosition;
     private GameObject rolePosition;
 
-    private CardDisplay[] cardsDisplays;
 
     private void OnEnable()
     {
@@ -88,12 +94,31 @@ public class Player : MonoBehaviour, IPunObservable
                 
             }
         }
+        else if (code == PhotonEventCodes.EndTurn)
+        {
+            object[] datas = content as object[];
+
+            if (datas.Length == 1)
+            {
+                if ((int) datas[0] == photonView.viewID && !photonView.isMine)
+                {
+                    GameManager.Instance.numberOfPlayerPlayed++;
+                    GameManager.Instance.playerPlayed = true;
+
+                    SetStatus(PlayerStatus.Fold);
+                }
+            }
+        }
     }
 
     private void Awake()
     {
+        SetStatus(PlayerStatus.NotTurn);
+
         photonView = GetComponent<PhotonView>();
         photonPlayer = photonView.owner;
+
+        playerUI = GetComponent<PlayerUI>();
 
         index = (int) photonPlayer.CustomProperties["Index"];
 
@@ -111,6 +136,8 @@ public class Player : MonoBehaviour, IPunObservable
     public void SetRole(PlayerRole _role)
     {
         role = _role;
+
+        if (_role != PlayerRole.Dealer || _role != PlayerRole.SB || _role != PlayerRole.BB) { return;}
 
         GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, rolePosition.transform);
         ChipDisplay display = chip.GetComponent<ChipDisplay>();
@@ -134,6 +161,11 @@ public class Player : MonoBehaviour, IPunObservable
             display.gameObject.transform.localScale.y * 2,
             display.gameObject.transform.localScale.z
         );
+    }
+
+    public void SetStatus(PlayerStatus _status)
+    {
+        status = _status;
     }
 
     public void DrawCard()
@@ -194,6 +226,79 @@ public class Player : MonoBehaviour, IPunObservable
 
             stackText.text = stack - value + "$";
         }
+    }
+
+    public void Fold()
+    {
+        GameManager.Instance.numberOfPlayerPlayed++;
+        GameManager.Instance.playerPlayed = true;
+
+        SetStatus(PlayerStatus.Fold);
+
+        object[] datas = { photonView.viewID };
+
+        RaiseEventOptions options = new RaiseEventOptions()
+        {
+            CachingOption = EventCaching.DoNotCache,
+            Receivers = ReceiverGroup.All
+        };
+
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
+
+    }
+
+    public void Check()
+    {
+        GameManager.Instance.numberOfPlayerPlayed++;
+        GameManager.Instance.playerPlayed = true;
+
+        SetStatus(PlayerStatus.NotTurn);
+
+        object[] datas = { photonView.viewID };
+
+        RaiseEventOptions options = new RaiseEventOptions()
+        {
+            CachingOption = EventCaching.DoNotCache,
+            Receivers = ReceiverGroup.All
+        };
+
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
+    }
+
+    public void Call()
+    {
+        GameManager.Instance.numberOfPlayerPlayed++;
+        GameManager.Instance.playerPlayed = true;
+
+        SetStatus(PlayerStatus.NotTurn);
+
+        object[] datas = { photonView.viewID };
+
+        RaiseEventOptions options = new RaiseEventOptions()
+        {
+            CachingOption = EventCaching.DoNotCache,
+            Receivers = ReceiverGroup.All
+        };
+
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
+    }
+
+    public void Bet()
+    {
+        GameManager.Instance.numberOfPlayerPlayed++;
+        GameManager.Instance.playerPlayed = true;
+
+        SetStatus(PlayerStatus.NotTurn);
+
+        object[] datas = { photonView.viewID };
+
+        RaiseEventOptions options = new RaiseEventOptions()
+        {
+            CachingOption = EventCaching.DoNotCache,
+            Receivers = ReceiverGroup.All
+        };
+
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

@@ -14,9 +14,15 @@ public class GameManager : MonoBehaviour
 
     public GameStateEnum gameState;
 
+    public bool playerPlayed = true;
+    public bool hasDrawCard = false;
+
+    public int numberOfPlayerPlayed = 0;
+
     private PhotonView photonView;
 
     private List<Player> players = new List<Player>();
+    private List<Player> ordererdPlayers = new List<Player>();
 
     private void Awake()
     {
@@ -91,16 +97,51 @@ public class GameManager : MonoBehaviour
     {
         foreach (Player p in players)
         {
-            if (p.index == 1)
-                p.SetRole(PlayerRole.Dealer);
+            switch (p.index)
+            {
+                case 1:
+                    p.SetRole(PlayerRole.Dealer);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 2:
+                    p.SetRole(PhotonNetwork.room.PlayerCount == 2 ? PlayerRole.BB : PlayerRole.SB);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 3:
+                    p.SetRole(PlayerRole.SB);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 4:
+                    if(PhotonNetwork.room.PlayerCount == 4)
+                        p.SetRole(PlayerRole.CutOff);
+                    else if (PhotonNetwork.room.PlayerCount == 5)
+                        p.SetRole(PlayerRole.HiJack);
+                    else if (PhotonNetwork.room.PlayerCount > 5)
+                        p.SetRole(PlayerRole.UTG);
 
-            if (p.index == 2 && PhotonNetwork.playerList.Length > 2)
-                p.SetRole(PlayerRole.SB);
-            else if (p.index == 2 && PhotonNetwork.playerList.Length == 2)
-                p.SetRole(PlayerRole.BB);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 5:
+                    if (PhotonNetwork.room.PlayerCount == 5)
+                        p.SetRole(PlayerRole.CutOff);
+                    else if (PhotonNetwork.room.PlayerCount > 5)
+                        p.SetRole(PlayerRole.UTG1);
 
-            if (p.index == 3)
-                p.SetRole(PlayerRole.BB);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 6:
+                    p.SetRole(PlayerRole.UTG2);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 7:
+                    p.SetRole(PlayerRole.HiJack);
+                    ordererdPlayers.Add(p);
+                    break;
+                case 8:
+                    p.SetRole(PlayerRole.CutOff);
+                    ordererdPlayers.Add(p);
+                    break;
+            }
         }
 
         gameState = GameStateEnum.Blinds;
@@ -122,11 +163,44 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     private void RPC_DrawPlayerCard()
     {
-        foreach (Player p in players)
+        if (!hasDrawCard)
         {
-            p.DrawCard();
+            foreach (Player p in players)
+            {
+                p.DrawCard();
+            }
         }
 
-        gameState = GameStateEnum.Flop;
+        hasDrawCard = true;
+
+        if (numberOfPlayerPlayed != PhotonNetwork.room.PlayerCount)
+        {
+            if (playerPlayed)
+            {
+                playerPlayed = false;
+                if (ordererdPlayers[numberOfPlayerPlayed].photonView.isMine)
+                    ordererdPlayers[numberOfPlayerPlayed].SetStatus(PlayerStatus.Turn);
+            }
+        }
+        else
+        {
+            numberOfPlayerPlayed = 0;
+            playerPlayed = true;
+
+            gameState = GameStateEnum.Flop;
+        }
+    }
+
+    private Player FindPlayerByRole(PlayerRole role)
+    {
+        foreach (Player p in players)
+        {
+            if (p.role == role)
+            {
+                return p;
+            }
+        }
+
+        return null;
     }
 }
