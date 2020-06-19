@@ -5,13 +5,13 @@ public class ChipDisplay : MonoBehaviour
 {
     public Chip chip;
     [HideInInspector]
-    public float percentageValue;
+    public float value;
 
     private void Start()
     {
         if (chip != null)
         {
-            percentageValue = chip.percentageValue;
+            value = chip.value;
 
             GetComponent<Image>().sprite = chip.image;
         }
@@ -21,7 +21,7 @@ public class ChipDisplay : MonoBehaviour
     {
         chip = _chip;
 
-        percentageValue = chip.percentageValue;
+        value = chip.value;
 
         GetComponent<Image>().sprite = chip.image;
     }

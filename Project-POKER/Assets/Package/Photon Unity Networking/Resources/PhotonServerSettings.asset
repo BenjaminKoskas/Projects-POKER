@@ -44,4 +44,7 @@ MonoBehaviour:
   - RPC_GameStartDefineRole
   - RPC_DrawPlayerCard
   - RPC_BlindsPay
+  - RPC_Distribution
+  - RPC_Blinds
+  - RPC_Preflop
   DisableAutoOpenWizard: 1

@@ -3,7 +3,7 @@
 [CreateAssetMenu(fileName = "New Chip", menuName = "Chips")]
 public class Chip : ScriptableObject
 {
-    public float percentageValue;
+    public int value;
 
     public bool isDealer;
     public bool isBB;

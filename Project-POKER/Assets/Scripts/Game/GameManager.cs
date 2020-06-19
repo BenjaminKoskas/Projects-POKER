@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum GameStateEnum
@@ -6,8 +7,7 @@ public enum GameStateEnum
     WaitForPlayers, Distribution, Blinds, Preflop, Flop, Turn, River
 }
 
-
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IPunObservable
 {
     public static GameManager Instance;
     public List<Card> deck = new List<Card>();
@@ -15,14 +15,20 @@ public class GameManager : MonoBehaviour
     public GameStateEnum gameState;
 
     public bool playerPlayed = true;
-    public bool hasDrawCard = false;
+    public bool playerDrawed = true;
 
+    public int numberOfPlayerDraw = 0;
     public int numberOfPlayerPlayed = 0;
+    public int numberOfCheckedPlayerPlayed = 0;
+
+    public int mainStack;
+
+    public List<Player> players = new List<Player>();
+    public List<Player> ordererdPlayers = new List<Player>();
+    public List<Player> playersWhoChecked = new List<Player>();
 
     private PhotonView photonView;
 
-    private List<Player> players = new List<Player>();
-    private List<Player> ordererdPlayers = new List<Player>();
 
     private void Awake()
     {
@@ -74,26 +80,32 @@ public class GameManager : MonoBehaviour
             case GameStateEnum.Distribution:
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPC_GameStartDefineRole", PhotonTargets.All);
+                    photonView.RPC("RPC_Distribution", PhotonTargets.All);
                 }
                 break;
             case GameStateEnum.Blinds:
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPC_BlindsPay", PhotonTargets.All);
+                    photonView.RPC("RPC_Blinds", PhotonTargets.All);
                 }
                 break;
             case GameStateEnum.Preflop:
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPC_DrawPlayerCard", PhotonTargets.All);
+                    photonView.RPC("RPC_Preflop", PhotonTargets.All);
                 }
+                break;
+            case GameStateEnum.Flop:
+                break;
+            case GameStateEnum.Turn:
+                break;
+            case GameStateEnum.River:
                 break;
         }
     }
 
     [PunRPC]
-    private void RPC_GameStartDefineRole()
+    private void RPC_Distribution()
     {
         foreach (Player p in players)
         {
@@ -101,15 +113,12 @@ public class GameManager : MonoBehaviour
             {
                 case 1:
                     p.SetRole(PlayerRole.Dealer);
-                    ordererdPlayers.Add(p);
                     break;
                 case 2:
                     p.SetRole(PhotonNetwork.room.PlayerCount == 2 ? PlayerRole.BB : PlayerRole.SB);
-                    ordererdPlayers.Add(p);
                     break;
                 case 3:
                     p.SetRole(PlayerRole.SB);
-                    ordererdPlayers.Add(p);
                     break;
                 case 4:
                     if(PhotonNetwork.room.PlayerCount == 4)
@@ -118,37 +127,47 @@ public class GameManager : MonoBehaviour
                         p.SetRole(PlayerRole.HiJack);
                     else if (PhotonNetwork.room.PlayerCount > 5)
                         p.SetRole(PlayerRole.UTG);
-
-                    ordererdPlayers.Add(p);
                     break;
                 case 5:
                     if (PhotonNetwork.room.PlayerCount == 5)
                         p.SetRole(PlayerRole.CutOff);
                     else if (PhotonNetwork.room.PlayerCount > 5)
                         p.SetRole(PlayerRole.UTG1);
-
-                    ordererdPlayers.Add(p);
                     break;
                 case 6:
                     p.SetRole(PlayerRole.UTG2);
-                    ordererdPlayers.Add(p);
                     break;
                 case 7:
                     p.SetRole(PlayerRole.HiJack);
-                    ordererdPlayers.Add(p);
                     break;
                 case 8:
                     p.SetRole(PlayerRole.CutOff);
-                    ordererdPlayers.Add(p);
                     break;
             }
         }
+
+        if(FindPlayerByRole(PlayerRole.UTG) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.UTG));
+        if (FindPlayerByRole(PlayerRole.UTG1) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.UTG1));
+        if (FindPlayerByRole(PlayerRole.UTG2) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.UTG2));
+        if (FindPlayerByRole(PlayerRole.HiJack) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.HiJack));
+        if (FindPlayerByRole(PlayerRole.CutOff) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.CutOff));
+        if (FindPlayerByRole(PlayerRole.Dealer) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.Dealer));
+        if (FindPlayerByRole(PlayerRole.SB) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.SB));
+        if (FindPlayerByRole(PlayerRole.BB) != null)
+            ordererdPlayers.Add(FindPlayerByRole(PlayerRole.BB));
 
         gameState = GameStateEnum.Blinds;
     }
 
     [PunRPC]
-    private void RPC_BlindsPay()
+    private void RPC_Blinds()
     {
         foreach (Player p in players)
         {
@@ -161,46 +180,118 @@ public class GameManager : MonoBehaviour
     }
 
     [PunRPC]
-    private void RPC_DrawPlayerCard()
+    private void RPC_Preflop()
     {
-        if (!hasDrawCard)
+        if (numberOfPlayerDraw < PhotonNetwork.room.PlayerCount)
         {
-            foreach (Player p in players)
+            if (playerDrawed)
             {
-                p.DrawCard();
+                playerDrawed = false;
+                if(ordererdPlayers[numberOfPlayerDraw].photonView.isMine)
+                    ordererdPlayers[numberOfPlayerDraw].DrawCard();
             }
         }
 
-        hasDrawCard = true;
+        numberOfPlayerDraw = Mathf.Clamp(numberOfPlayerDraw, 0, PhotonNetwork.room.PlayerCount);
 
+        if (numberOfPlayerDraw == PhotonNetwork.room.PlayerCount)
+            GameLoop(GameStateEnum.Flop);
+    }
+
+    public void GameLoop(GameStateEnum nextState)
+    {
         if (numberOfPlayerPlayed != PhotonNetwork.room.PlayerCount)
         {
             if (playerPlayed)
             {
                 playerPlayed = false;
-                if (ordererdPlayers[numberOfPlayerPlayed].photonView.isMine)
+                if(ordererdPlayers[numberOfPlayerPlayed].photonView.isMine)
                     ordererdPlayers[numberOfPlayerPlayed].SetStatus(PlayerStatus.Turn);
             }
         }
         else
         {
+            foreach (Player p in ordererdPlayers)
+            {
+                if (p.hasCheck)
+                    playersWhoChecked.Add(p);
+            }
+
+            if (playersWhoChecked.Count != 0)
+            {
+                playerPlayed = true;
+                if (playerPlayed)
+                {
+                    playerPlayed = false;
+                    if (playersWhoChecked[numberOfCheckedPlayerPlayed].photonView.isMine)
+                    {
+                        playersWhoChecked[numberOfCheckedPlayerPlayed].SetStatus(PlayerStatus.Turn);
+                    }
+                }
+            }
+
             numberOfPlayerPlayed = 0;
             playerPlayed = true;
 
-            gameState = GameStateEnum.Flop;
+            gameState = nextState;
         }
     }
 
-    private Player FindPlayerByRole(PlayerRole role)
+    public List<Player> FindPlayersWhoChecked()
+    {
+        List<Player> ps = new List<Player>();
+
+        foreach (Player p in ordererdPlayers)
+        {
+            if (p.hasCheck)
+            {
+                ps.Add(p);
+            }
+        }
+
+        return ps;
+    }
+
+    public Player FindPlayerByRole(PlayerRole role)
     {
         foreach (Player p in players)
         {
             if (p.role == role)
-            {
                 return p;
+        }
+
+        return null;
+    }
+
+    public Player FindPlayerBefore(Player player)
+    {
+        int indexBefore;
+        if (ordererdPlayers.FindIndex(x => x == player) == 0)
+            indexBefore = ordererdPlayers.Count - 1;
+        else
+            indexBefore = ordererdPlayers.FindIndex(x => x == player) - 1;
+
+        foreach (Player p in ordererdPlayers)
+        {
+            if (p != player)
+            {
+                if (ordererdPlayers.FindIndex(x => x == p) == indexBefore)
+                    return p;
             }
         }
 
         return null;
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.isWriting)
+        {
+            stream.SendNext(gameState);
+        } 
+        else if (stream.isReading)
+        {
+            gameState = (GameStateEnum) stream.ReceiveNext();
+        }
     }
 }

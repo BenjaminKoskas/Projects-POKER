@@ -60,34 +60,88 @@ public class PlayerUI : MonoBehaviour
     private void Update()
     {
         if (!initialized) { return; }
+
         if (player.status.Equals(PlayerStatus.Fold) || player.status.Equals(PlayerStatus.NotTurn) && playerUI.activeSelf)
             playerUI.SetActive(false);
-        else if (player.status.Equals(PlayerStatus.Turn) && !playerUI.activeSelf)
+        else if (player.status.Equals(PlayerStatus.Turn) && !playerUI.activeSelf && !player.hasCheck && GameManager.Instance.mainStack == 0)
+        {
             playerUI.SetActive(true);
+            checkButton.gameObject.SetActive(true);
+        }
+        else if (player.status.Equals(PlayerStatus.Turn) && !playerUI.activeSelf && player.hasCheck)
+        {
+            playerUI.SetActive(true);
+            checkButton.gameObject.SetActive(false);
+        } 
+        else if (player.status.Equals(PlayerStatus.Turn) && !playerUI.activeSelf && !player.hasCheck &&
+                 GameManager.Instance.mainStack > 0)
+        {
+            if(GameManager.Instance.gameState.Equals(GameStateEnum.Preflop))
+                if (player.role.Equals(PlayerRole.BB) && !(GameManager.Instance.FindPlayerBefore(player).betStack > (int)PhotonNetwork.room.CustomProperties["BB"]))
+                {
+                    playerUI.SetActive(true);
+                    checkButton.gameObject.SetActive(true);
+                    return;
+                }
+
+            playerUI.SetActive(true);
+            checkButton.gameObject.SetActive(false);
+        }
+
+        if (playerUI.activeSelf)
+        {
+            if (GameManager.Instance.mainStack == 0)
+            {
+                minBet.gameObject.SetActive(false);
+                halfBet.gameObject.SetActive(false);
+                threeQuartBet.gameObject.SetActive(false);
+                potBet.gameObject.SetActive(false);
+            } 
+            else if(GameManager.Instance.mainStack == (int)PhotonNetwork.room.CustomProperties["BB"])
+            {
+                halfBet.gameObject.SetActive(false);
+                threeQuartBet.gameObject.SetActive(false);
+            } 
+            else if (GameManager.Instance.mainStack / 2 < (int) PhotonNetwork.room.CustomProperties["BB"])
+            {
+                halfBet.gameObject.SetActive(false);
+            } 
+            else if (GameManager.Instance.mainStack * 0.75 < (int) PhotonNetwork.room.CustomProperties["BB"])
+            {
+                threeQuartBet.gameObject.SetActive(false);
+            }
+            else
+            {
+                minBet.gameObject.SetActive(true);
+                halfBet.gameObject.SetActive(true);
+                threeQuartBet.gameObject.SetActive(true);
+                potBet.gameObject.SetActive(true);
+            }
+        }
     }
 
     private void MinBet()
     {
-
+        betField.text = (float)PhotonNetwork.room.CustomProperties["BB"] + "$";
     }
 
     private void HalfBet()
     {
-
+        betField.text = GameManager.Instance.mainStack / 2 + "$";
     }
 
     private void ThreeQuartBet()
     {
-
+        betField.text = GameManager.Instance.mainStack * 0.75 + "$";
     }
 
     private void PotBet()
     {
-
+        betField.text = GameManager.Instance.mainStack + "$";
     }
 
     private void AllInBet()
     {
-
+        betField.text = player.stack.ToString() + '$';
     }
 }
