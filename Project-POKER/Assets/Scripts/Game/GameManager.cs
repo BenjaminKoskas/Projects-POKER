@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public enum GameStateEnum
@@ -18,17 +17,16 @@ public class GameManager : MonoBehaviour, IPunObservable
     public bool playerDrawed = true;
 
     public int numberOfPlayerDraw = 0;
-    public int numberOfPlayerPlayed = 0;
-    public int numberOfCheckedPlayerPlayed = 0;
+    public int playIndex = 0;
+    public int rebet;
 
     public int mainStack;
+    public int minBet;
 
     public List<Player> players = new List<Player>();
     public List<Player> ordererdPlayers = new List<Player>();
-    public List<Player> playersWhoChecked = new List<Player>();
 
     private PhotonView photonView;
-
 
     private void Awake()
     {
@@ -53,6 +51,7 @@ public class GameManager : MonoBehaviour, IPunObservable
 
     private void Update()
     {
+        if (!PhotonNetwork.isMasterClient) { return; }
         if (PlayerNetwork.Instance == null)
             return;
 
@@ -62,7 +61,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         {
             foreach (Player p in FindObjectsOfType<Player>())
             {
-                if(!players.Contains(p))
+                if (!players.Contains(p))
                     players.Add(p);
             }
         }
@@ -86,13 +85,13 @@ public class GameManager : MonoBehaviour, IPunObservable
             case GameStateEnum.Blinds:
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPC_Blinds", PhotonTargets.All);
+                    photonView.RPC("RPC_Blinds", PhotonTargets.MasterClient);
                 }
                 break;
             case GameStateEnum.Preflop:
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPC_Preflop", PhotonTargets.All);
+                    photonView.RPC("RPC_Preflop", PhotonTargets.MasterClient);
                 }
                 break;
             case GameStateEnum.Flop:
@@ -115,10 +114,10 @@ public class GameManager : MonoBehaviour, IPunObservable
                     p.SetRole(PlayerRole.Dealer);
                     break;
                 case 2:
-                    p.SetRole(PhotonNetwork.room.PlayerCount == 2 ? PlayerRole.BB : PlayerRole.SB);
+                    p.SetRole(PhotonNetwork.playerList.Length == 2 ? PlayerRole.BB : PlayerRole.SB);
                     break;
                 case 3:
-                    p.SetRole(PlayerRole.SB);
+                    p.SetRole(PlayerRole.BB);
                     break;
                 case 4:
                     if(PhotonNetwork.room.PlayerCount == 4)
@@ -187,53 +186,53 @@ public class GameManager : MonoBehaviour, IPunObservable
             if (playerDrawed)
             {
                 playerDrawed = false;
-                if(ordererdPlayers[numberOfPlayerDraw].photonView.isMine)
-                    ordererdPlayers[numberOfPlayerDraw].DrawCard();
+                ordererdPlayers[numberOfPlayerDraw].DrawCard();
             }
         }
 
         numberOfPlayerDraw = Mathf.Clamp(numberOfPlayerDraw, 0, PhotonNetwork.room.PlayerCount);
 
         if (numberOfPlayerDraw == PhotonNetwork.room.PlayerCount)
-            GameLoop(GameStateEnum.Flop);
+        {
+            minBet = (int)PhotonNetwork.room.CustomProperties["BB"];
+            PreFlopGameLoop();
+        }
     }
 
-    public void GameLoop(GameStateEnum nextState)
+    public void PreFlopGameLoop()
     {
-        if (numberOfPlayerPlayed != PhotonNetwork.room.PlayerCount)
+        bool canNextState = false;
+        if (playIndex == PhotonNetwork.room.PlayerCount)
+            playIndex = 0;
+        if (playIndex != PhotonNetwork.room.PlayerCount)
         {
             if (playerPlayed)
             {
-                playerPlayed = false;
-                if(ordererdPlayers[numberOfPlayerPlayed].photonView.isMine)
-                    ordererdPlayers[numberOfPlayerPlayed].SetStatus(PlayerStatus.Turn);
-            }
-        }
-        else
-        {
-            foreach (Player p in ordererdPlayers)
-            {
-                if (p.hasCheck)
-                    playersWhoChecked.Add(p);
-            }
+                int x= 0;
+                foreach (Player p in ordererdPlayers)
+                {
+                    if (p.betStack == minBet)
+                        x++;
+                }
 
-            if (playersWhoChecked.Count != 0)
-            {
-                playerPlayed = true;
-                if (playerPlayed)
+                if (x == ordererdPlayers.Count)
+                {
+                    canNextState = true;
+                }
+                else
                 {
                     playerPlayed = false;
-                    if (playersWhoChecked[numberOfCheckedPlayerPlayed].photonView.isMine)
-                    {
-                        playersWhoChecked[numberOfCheckedPlayerPlayed].SetStatus(PlayerStatus.Turn);
-                    }
+                    ordererdPlayers[playIndex].SetStatus(PlayerStatus.Turn);
                 }
             }
+        }
 
-            numberOfPlayerPlayed = 0;
+        if(canNextState)
+        {
+            playIndex = 0;
             playerPlayed = true;
 
-            gameState = nextState;
+            gameState = GameStateEnum.Flop;
         }
     }
 
@@ -254,10 +253,10 @@ public class GameManager : MonoBehaviour, IPunObservable
 
     public Player FindPlayerByRole(PlayerRole role)
     {
-        foreach (Player p in players)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (p.role == role)
-                return p;
+            if (players[i].role == role)
+                return players[i];
         }
 
         return null;
@@ -283,15 +282,39 @@ public class GameManager : MonoBehaviour, IPunObservable
         return null;
     }
 
+    public Player FindFirstPlayerToPlay()
+    {
+        return ordererdPlayers[0];
+    }
+
+    public Player FindLastPlayerToPlay()
+    {
+        return ordererdPlayers[ordererdPlayers.Count - 1];
+    }
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.isWriting)
         {
-            stream.SendNext(gameState);
+            stream.SendNext((int)gameState);
+            stream.SendNext(rebet);
+            stream.SendNext(minBet);
+            stream.SendNext(numberOfPlayerDraw);
+            stream.SendNext(playerDrawed);
+            stream.SendNext(mainStack);
+            stream.SendNext(playIndex);
+            stream.SendNext(playerPlayed);
         } 
         else if (stream.isReading)
         {
-            gameState = (GameStateEnum) stream.ReceiveNext();
+            gameState = (GameStateEnum)(int) stream.ReceiveNext();
+            rebet = (int) stream.ReceiveNext();
+            minBet = (int) stream.ReceiveNext();
+            numberOfPlayerDraw = (int) stream.ReceiveNext();
+            playerDrawed = (bool) stream.ReceiveNext();
+            mainStack = (int) stream.ReceiveNext();
+            playIndex = (int) stream.ReceiveNext();
+            playerPlayed = (bool) stream.ReceiveNext();
         }
     }
 }

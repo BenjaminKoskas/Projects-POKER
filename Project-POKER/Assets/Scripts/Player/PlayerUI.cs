@@ -76,63 +76,80 @@ public class PlayerUI : MonoBehaviour
         else if (player.status.Equals(PlayerStatus.Turn) && !playerUI.activeSelf && !player.hasCheck &&
                  GameManager.Instance.mainStack > 0)
         {
-            if(GameManager.Instance.gameState.Equals(GameStateEnum.Preflop))
+            if (GameManager.Instance.gameState.Equals(GameStateEnum.Preflop))
+            {
                 if (player.role.Equals(PlayerRole.BB) && !(GameManager.Instance.FindPlayerBefore(player).betStack > (int)PhotonNetwork.room.CustomProperties["BB"]))
                 {
                     playerUI.SetActive(true);
                     checkButton.gameObject.SetActive(true);
                     return;
                 }
-
+            }
+            
             playerUI.SetActive(true);
             checkButton.gameObject.SetActive(false);
-        }
-
-        if (playerUI.activeSelf)
-        {
-            if (GameManager.Instance.mainStack == 0)
-            {
-                minBet.gameObject.SetActive(false);
-                halfBet.gameObject.SetActive(false);
-                threeQuartBet.gameObject.SetActive(false);
-                potBet.gameObject.SetActive(false);
-            } 
-            else if(GameManager.Instance.mainStack == (int)PhotonNetwork.room.CustomProperties["BB"])
-            {
-                halfBet.gameObject.SetActive(false);
-                threeQuartBet.gameObject.SetActive(false);
-            } 
-            else if (GameManager.Instance.mainStack / 2 < (int) PhotonNetwork.room.CustomProperties["BB"])
-            {
-                halfBet.gameObject.SetActive(false);
-            } 
-            else if (GameManager.Instance.mainStack * 0.75 < (int) PhotonNetwork.room.CustomProperties["BB"])
-            {
-                threeQuartBet.gameObject.SetActive(false);
-            }
-            else
-            {
-                minBet.gameObject.SetActive(true);
-                halfBet.gameObject.SetActive(true);
-                threeQuartBet.gameObject.SetActive(true);
-                potBet.gameObject.SetActive(true);
-            }
         }
     }
 
     private void MinBet()
     {
-        betField.text = (float)PhotonNetwork.room.CustomProperties["BB"] + "$";
+        betField.text = GameManager.Instance.FindPlayerBefore(player).hasCheck ? (int)PhotonNetwork.room.CustomProperties["BB"] + "$" : GameManager.Instance.FindPlayerBefore(player).betStack + "$";
     }
 
     private void HalfBet()
     {
-        betField.text = GameManager.Instance.mainStack / 2 + "$";
+        int bet;
+        if (GameManager.Instance.FindFirstPlayerToPlay() == player || GameManager.Instance.FindPlayerBefore(player).hasCheck)
+        {
+            if (GameManager.Instance.mainStack >= (int) PhotonNetwork.room.CustomProperties["BB"] * 2)
+            {
+                bet = (int)Mathf.Round(GameManager.Instance.mainStack / 2);
+            }
+            else
+            {
+                bet = (int) PhotonNetwork.room.CustomProperties["BB"];
+            }
+        }
+        else
+        {
+            if (GameManager.Instance.mainStack / 2 >= GameManager.Instance.FindPlayerBefore(player).betStack)
+            {
+                bet = (int)Mathf.Round(GameManager.Instance.mainStack / 2);
+            }
+            else
+            {
+                bet = GameManager.Instance.FindPlayerBefore(player).betStack;
+            }
+        }
+        betField.text = bet + "$";
     }
 
     private void ThreeQuartBet()
     {
-        betField.text = GameManager.Instance.mainStack * 0.75 + "$";
+        int bet;
+        if (GameManager.Instance.FindFirstPlayerToPlay() == player || GameManager.Instance.FindPlayerBefore(player).hasCheck)
+        {
+            if (GameManager.Instance.mainStack >= (int)PhotonNetwork.room.CustomProperties["BB"] * 1.75)
+            {
+                bet = (int)Mathf.Round(GameManager.Instance.mainStack * 0.75f);
+            }
+            else
+            {
+                bet = (int)PhotonNetwork.room.CustomProperties["BB"];
+            }
+        }
+        else
+        {
+            if (GameManager.Instance.mainStack * 0.75 >= GameManager.Instance.FindPlayerBefore(player).betStack)
+            {
+                bet = (int)Mathf.Round(GameManager.Instance.mainStack * 0.75f);
+            }
+            else
+            {
+                bet = GameManager.Instance.FindPlayerBefore(player).betStack;
+            }
+        }
+        betField.text = bet + "$";
     }
 
     private void PotBet()

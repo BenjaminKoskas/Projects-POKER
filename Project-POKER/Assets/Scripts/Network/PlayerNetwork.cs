@@ -22,7 +22,7 @@ public class PlayerNetwork : MonoBehaviour
 
         PhotonView = GetComponent<PhotonView>();
 
-        PlayerName = DBManager.username;
+        PlayerName = PlayerSave.LoadPlayer().username;
 
         playersPosition.Add(new Vector2(0, 513));
         playersPosition.Add(new Vector2(620, 450));
@@ -67,7 +67,7 @@ public class PlayerNetwork : MonoBehaviour
     [PunRPC]
     private void RPC_LoadGameOthers()
     {
-        PhotonNetwork.LoadLevel(4);
+        PhotonNetwork.LoadLevel(2);
     }
 
     [PunRPC]

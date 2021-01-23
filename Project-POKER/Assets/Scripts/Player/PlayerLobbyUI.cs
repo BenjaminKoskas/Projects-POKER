@@ -8,10 +8,8 @@ public class PlayerLobbyUI : MonoBehaviour
 
     private void Start()
     {
-        if (DBManager.LoggedIn)
-        {
-            usernameField.text = DBManager.username;
-            cashField.text = DBManager.cash + "$";
-        }
+        PlayerData data = PlayerSave.LoadPlayer();
+        usernameField.text = data.username;
+        cashField.text = data.cash + "$";
     }
 }

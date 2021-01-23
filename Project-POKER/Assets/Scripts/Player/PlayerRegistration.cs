@@ -1,44 +1,37 @@
-﻿using System.Collections;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Networking;
+using Random = System.Random;
 
 public class PlayerRegistration : MonoBehaviour
 {
     public TMP_InputField nameField;
-    public TMP_InputField passwordField;
 
     public Button submitButton;
 
-    public void CallRegister()
+    private void Start()
     {
-        StartCoroutine(Register());
+        /*
+        if(PlayerSave.SaveExist())
+            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+        */
     }
 
-    IEnumerator Register()
+    private void Update()
     {
-        WWWForm form = new WWWForm();
-        form.AddField("name", nameField.text);
-        form.AddField("password", passwordField.text);
+        VerifyInputs();
+    }
 
-        UnityWebRequest request = UnityWebRequest.Post("http://localhost:8888/sqlconnect/register.php", form);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        yield return request.SendWebRequest();
+    public void CallRegister()
+    {
+        Random r = new Random();
+        PlayerSave.SavePlayer(nameField.text, 10000, "User" + r.Next(0, 10000));
 
-        if (request.downloadHandler.text == "0")
-        {
-            Debug.Log("User Created Succesfully.");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
-        }
-        else
-        {
-            Debug.LogError("User Creation failed. Error #" + request.downloadHandler.text);
-        }
+        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
     }
 
     public void VerifyInputs()
     {
-        submitButton.interactable = (nameField.text.Length >= 8 && passwordField.text.Length >= 8);
+        submitButton.interactable = (nameField.text.Length >= 6);
     }
 }

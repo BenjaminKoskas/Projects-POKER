@@ -17,7 +17,7 @@ public class CurrentRoomCanvas : MonoBehaviour
         if (!PhotonNetwork.isMasterClient)
             return;
 
-        PhotonNetwork.LoadLevel(4);
+        PhotonNetwork.LoadLevel(2);
     }
 
     public void OnClickStartDelayed()
@@ -27,7 +27,7 @@ public class CurrentRoomCanvas : MonoBehaviour
 
         PhotonNetwork.room.IsOpen = false;
         PhotonNetwork.room.IsVisible = false;
-        PhotonNetwork.LoadLevel(4);
+        PhotonNetwork.LoadLevel(2);
     }
 
     private void UpdateBuyIn()

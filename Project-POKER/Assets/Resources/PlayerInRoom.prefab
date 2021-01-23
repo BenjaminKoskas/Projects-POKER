@@ -607,7 +607,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c81d7f651de0804fa1dc50956ed7e06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  role: 0
+  role: 5
+  status: 0
+  hasCheck: 0
+  hasPlay: 0
   index: 0
   stackText: {fileID: 5305762779074603377}
   betStackText: {fileID: 0}
@@ -617,6 +620,9 @@ MonoBehaviour:
   hiddenCards:
   - {fileID: 1938913503}
   - {fileID: 1650161251}
+  stack: 0
+  betStack: 0
+  photonView: {fileID: 0}
 --- !u!114 &8993311965687060600
 MonoBehaviour:
   m_ObjectHideFlags: 0

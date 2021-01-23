@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using ExitGames.Client.Photon;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using Random = System.Random;
@@ -8,7 +8,7 @@ public enum PlayerRole {Dealer, BB, SB, UTG, UTG1, UTG2, HiJack, CutOff}
 
 public enum PlayerStatus {Fold, NotTurn, Turn}
 
-public enum PhotonEventCodes {DrawCard = 0, EndTurn = 1, StackUpdate = 2, CheckUpdate = 3, GameStateUpdate = 4}
+public enum PhotonEventCodes {DrawCard = 0, EndTurn = 1, RoleUpdate = 2, BetUpdate = 3}
 
 public class Player : MonoBehaviour, IPunObservable
 {
@@ -16,6 +16,7 @@ public class Player : MonoBehaviour, IPunObservable
     public PlayerStatus status;
 
     public bool hasCheck = false;
+    public bool hasPlay = false;
 
     public int index;
 
@@ -48,6 +49,12 @@ public class Player : MonoBehaviour, IPunObservable
     private void OnDisable()
     {
         PhotonNetwork.OnEventCall -= OnPhotonEvent;
+    }
+
+    private void Update()
+    {
+        if (photonView.isMine)
+            Debug.Log(role);
     }
 
     private void OnPhotonEvent(byte eventCode, object content, int senderId)
@@ -94,63 +101,91 @@ public class Player : MonoBehaviour, IPunObservable
                 {
                     hiddenCards[0].SetActive(true);
                     hiddenCards[1].SetActive(true);
-
-                    GameManager.Instance.numberOfPlayerDraw++;
-                    GameManager.Instance.playerDrawed = true;
                 }
-                
             }
         }
         else if (code == PhotonEventCodes.EndTurn)
         {
             object[] datas = content as object[];
 
-            if (datas.Length == 2)
+            if (datas.Length == 1)
             {
-                if ((int) datas[0] == photonView.viewID && !photonView.isMine)
-                {
-                    if ((int)datas[1] == (int)PlayerStatus.Fold)
-                        GameManager.Instance.ordererdPlayers.Remove(this);
-                    else
-                        GameManager.Instance.numberOfPlayerPlayed++;
-
-                    GameManager.Instance.playerPlayed = true;
-
-                    SetStatus((PlayerStatus)(int)datas[1]);
-                }
-            } 
-            else if (datas.Length == 3)
-            {
-                if ((int)datas[0] == photonView.viewID && !photonView.isMine)
-                {
-                    GameManager.Instance.numberOfPlayerPlayed++;
-                    GameManager.Instance.playerPlayed = true;
-
-                    SetStatus((PlayerStatus)(int)datas[1]);
-                    hasCheck = (bool) datas[2];
-                }
+                if((int)datas[0] == photonView.viewID)
+                    GameManager.Instance.ordererdPlayers.Remove(this);
             }
         }
-        else if (code == PhotonEventCodes.CheckUpdate)
+        else if (code == PhotonEventCodes.RoleUpdate)
         {
             object[] datas = content as object[];
 
-            if (datas.Length == 2)
+            if (datas.Length == 4)
             {
-                if ((int)datas[0] == photonView.viewID && !photonView.isMine)
+                if ((int) datas[0] != photonView.viewID) { return;}
+                Chip _chip = new Chip();
+
+                if ((bool)datas[1])
+                    _chip = ChipsManager.Instance.BB;
+                else if ((bool)datas[2])
+                    _chip = ChipsManager.Instance.SB;
+                else if ((bool)datas[3])
+                    _chip = ChipsManager.Instance.dealer;
+
+                GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, rolePosition.transform);
+                ChipDisplay display = chip.GetComponent<ChipDisplay>();
+
+                display.SetChip(_chip);
+
+                display.gameObject.transform.localScale = new Vector3
+                (
+                    display.gameObject.transform.localScale.x * 2,
+                    display.gameObject.transform.localScale.y * 2,
+                    display.gameObject.transform.localScale.z
+                );
+            }
+        }
+        else if (code == PhotonEventCodes.BetUpdate)
+        {
+            object[] datas = content as object[];
+
+            if (datas.Length == 3)
+            {
+                if ((int)datas[0] != photonView.viewID) { return; }
+                int[] chipsValue = (int[]) datas[1];
+
+                List<Chip> chips = new List<Chip>();
+
+                foreach (int value in chipsValue)
                 {
-                    hasCheck = (bool)datas[1];
+                    foreach (Chip c in ChipsManager.Instance.chips.Values)
+                    {
+                        if(c.value == value)
+                            chips.Add(c);
+                    }
                 }
+
+                foreach (Chip c in chips)
+                {
+                    GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, chipsPosition.transform);
+                    ChipDisplay display = chip.GetComponent<ChipDisplay>();
+
+                    display.SetChip(c);
+                }
+
+                if (!betStackParent.activeSelf)
+                    betStackParent.SetActive(true);
+
+                betStackText.text = (int)datas[2] + "$";
+                stackText.text = stack + "$";
             }
         }
     }
 
     private void Awake()
     {
-        SetStatus(PlayerStatus.NotTurn);
-
         photonView = GetComponent<PhotonView>();
         photonPlayer = photonView.owner;
+
+        SetStatus(PlayerStatus.NotTurn);
 
         stack = (int)photonPlayer.CustomProperties["Stack"];
 
@@ -173,30 +208,18 @@ public class Player : MonoBehaviour, IPunObservable
     {
         role = _role;
 
-        if (_role != PlayerRole.Dealer || _role != PlayerRole.SB || _role != PlayerRole.BB) { return;}
-
-        GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, rolePosition.transform);
-        ChipDisplay display = chip.GetComponent<ChipDisplay>();
-
         switch (_role)
         {
             case PlayerRole.Dealer:
-                display.SetChip(ChipsManager.Instance.dealer);
+                SetRoleChip(ChipsManager.Instance.dealer);
                 break;
             case PlayerRole.BB:
-                display.SetChip(ChipsManager.Instance.BB);
+                SetRoleChip(ChipsManager.Instance.BB);
                 break;
             case PlayerRole.SB:
-                display.SetChip(ChipsManager.Instance.SB);
+                SetRoleChip(ChipsManager.Instance.SB);
                 break;
         }
-
-        display.gameObject.transform.localScale = new Vector3
-        (
-            display.gameObject.transform.localScale.x * 2,
-            display.gameObject.transform.localScale.y * 2,
-            display.gameObject.transform.localScale.z
-        );
     }
 
     public void SetStatus(PlayerStatus _status)
@@ -212,7 +235,6 @@ public class Player : MonoBehaviour, IPunObservable
         {
             Card card1 = GameManager.Instance.deck[r.Next(0, GameManager.Instance.deck.Count - 1)];
             GameManager.Instance.deck.Remove(card1);
-
             Card card2 = GameManager.Instance.deck[r.Next(0, GameManager.Instance.deck.Count - 1)];
             GameManager.Instance.deck.Remove(card1);
 
@@ -238,15 +260,20 @@ public class Player : MonoBehaviour, IPunObservable
     public void PayBlinds()
     {
         int value = role == PlayerRole.BB ? (int)PhotonNetwork.room.CustomProperties["BB"] : (int)PhotonNetwork.room.CustomProperties["SB"];
-
+        
         AddBet(value);
     }
 
     public void Fold()
     {
         SetStatus(PlayerStatus.Fold);
+        if (hasCheck)
+            SetCheck(false);
+        hasPlay = true;
 
-        object[] datas = { photonView.viewID, (int)PlayerStatus.Fold };
+        GameManager.Instance.playerPlayed = true;
+
+        object[] datas = { photonView.viewID };
 
         RaiseEventOptions options = new RaiseEventOptions()
         {
@@ -255,74 +282,84 @@ public class Player : MonoBehaviour, IPunObservable
         };
 
         PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
-
-        if(hasCheck)
-            SetCheck(false);
-
-        GameManager.Instance.ordererdPlayers.Remove(this);
-        GameManager.Instance.playerPlayed = true;
     }
 
     public void Check()
     {
         SetStatus(PlayerStatus.NotTurn);
-        hasCheck = true;
-
-        object[] datas = { photonView.viewID, (int)PlayerStatus.NotTurn, hasCheck };
-
-        RaiseEventOptions options = new RaiseEventOptions()
-        {
-            CachingOption = EventCaching.DoNotCache,
-            Receivers = ReceiverGroup.All
-        };
-
-        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
-
-        GameManager.Instance.numberOfPlayerPlayed++;
+        SetCheck(true);
+        GameManager.Instance.playIndex++;
         GameManager.Instance.playerPlayed = true;
+        hasPlay = true;
     }
 
     public void SetCheck(bool _check)
     {
         hasCheck = _check;
-
-        object[] datas = { photonView.viewID, hasCheck };
-
-        RaiseEventOptions options = new RaiseEventOptions()
-        {
-            CachingOption = EventCaching.DoNotCache,
-            Receivers = ReceiverGroup.All
-        };
-
-        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.CheckUpdate, datas, false, options);
     }
 
     public void Call()
     {
         SetStatus(PlayerStatus.NotTurn);
-
-        object[] datas = { photonView.viewID, (int)PlayerStatus.NotTurn };
-
-        RaiseEventOptions options = new RaiseEventOptions()
-        {
-            CachingOption = EventCaching.DoNotCache,
-            Receivers = ReceiverGroup.All
-        };
-
-        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
-
         if (hasCheck)
             SetCheck(false);
+        hasPlay = true;
 
-        GameManager.Instance.numberOfPlayerPlayed++;
+        GameManager.Instance.playIndex++;
         GameManager.Instance.playerPlayed = true;
     }
 
     public void Bet()
     {
-        SetStatus(PlayerStatus.NotTurn);
+        string betT = playerUI.betField.text.Replace('$', ' ');
+        int bet = int.Parse(betT);
+        if (GameManager.Instance.FindPlayerBefore(this).hasCheck ||
+            GameManager.Instance.FindFirstPlayerToPlay() == this)
+        {
+            if (bet < (int) PhotonNetwork.room.CustomProperties["BB"])
+                return;
+        }
+        else
+        {
+            if (bet < GameManager.Instance.FindPlayerBefore(this).betStack)
+                return;
+        }
 
-        object[] datas = { photonView.viewID, (int)PlayerStatus.NotTurn };
+        if (bet > GameManager.Instance.FindPlayerBefore(this).betStack)
+        {
+            if (GameManager.Instance.rebet != 3)
+            {
+                GameManager.Instance.rebet++;
+                GameManager.Instance.minBet = bet;
+            }
+            else
+                return;
+        }
+
+        AddBet(bet);
+        SetStatus(PlayerStatus.NotTurn);
+        if (hasCheck)
+            SetCheck(false);
+        hasPlay = true;
+
+        GameManager.Instance.playIndex++;
+        GameManager.Instance.playerPlayed = true;
+    }
+
+    public void AddBet(int bet)
+    {
+        GameManager.Instance.mainStack += bet;
+        betStack += bet;
+        Debug.LogError(betStack);
+        stack -= bet;
+
+        int[] chipsValue = new int[ChipsManager.Instance.FindChipsByValue(bet).Count];
+        foreach (Chip c in ChipsManager.Instance.FindChipsByValue(bet))
+        {
+            chipsValue.Append(c.value);
+        }
+
+        object[] datas = { photonView.viewID, chipsValue, bet };
 
         RaiseEventOptions options = new RaiseEventOptions()
         {
@@ -330,61 +367,39 @@ public class Player : MonoBehaviour, IPunObservable
             Receivers = ReceiverGroup.All
         };
 
-        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.EndTurn, datas, false, options);
-
-        if (hasCheck)
-            SetCheck(false);
-
-        GameManager.Instance.numberOfPlayerPlayed++;
-        GameManager.Instance.playerPlayed = true;
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.BetUpdate, datas, false, options);
     }
 
-    public void AddBet(int bet)
+    public void SetRoleChip(Chip _chip)
     {
-        List<Chip> chips = ChipsManager.Instance.FindChipsByValue(bet);
+        object[] datas = { photonView.viewID, _chip.isBB, _chip.isSB, _chip.isDealer };
 
-        foreach (Chip c in chips)
+        RaiseEventOptions options = new RaiseEventOptions()
         {
-            GameObject chip = Instantiate(ChipsManager.Instance.chipPrefab, chipsPosition.transform);
-            ChipDisplay display = chip.GetComponent<ChipDisplay>();
+            CachingOption = EventCaching.DoNotCache,
+            Receivers = ReceiverGroup.All
+        };
 
-            display.SetChip(c);
-        }
-
-        if (!betStackParent.activeSelf)
-            betStackParent.SetActive(true);
-
-        betStack += bet;
-        betStackText.text = betStack + "$";
-
-        GameManager.Instance.mainStack += bet;
-
-        if (photonView.isMine)
-        {
-            int stack = (int)PhotonNetwork.player.CustomProperties["Stack"];
-
-            ExitGames.Client.Photon.Hashtable hash = new Hashtable
-            {
-                {"Stack", stack - bet}
-            };
-
-            PhotonNetwork.player.SetCustomProperties(hash);
-
-            stackText.text = stack - bet + "$";
-        }
+        PhotonNetwork.RaiseEvent((byte)PhotonEventCodes.RoleUpdate, datas, false, options);
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.isWriting)
         {
-            stream.SendNext(stackText.text);
-            stream.SendNext(betStackText.text);
+            stream.SendNext(betStack);
+            stream.SendNext(stack);
+            stream.SendNext((int)status);
+            stream.SendNext(hasCheck);
+            stream.SendNext(hasPlay);
         }
         else if (stream.isReading)
         {
-            stackText.text = (string) stream.ReceiveNext();
-            betStackText.text = (string) stream.ReceiveNext();
+            betStack = (int)stream.ReceiveNext();
+            stack = (int)stream.ReceiveNext();
+            status = (PlayerStatus)(int)stream.ReceiveNext();
+            hasCheck = (bool)stream.ReceiveNext();
+            hasPlay = (bool)stream.ReceiveNext();
         }
     }
 }
